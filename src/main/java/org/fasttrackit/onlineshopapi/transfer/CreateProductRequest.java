@@ -9,9 +9,9 @@ public class CreateProductRequest {
     private String name;
     @NotNull
     @Min(0)
-    private int quantity;
+    private Integer quantity;
     @NotNull
-    private double price;
+    private Double price;
     private String imagePath;
 
     public String getName() {
