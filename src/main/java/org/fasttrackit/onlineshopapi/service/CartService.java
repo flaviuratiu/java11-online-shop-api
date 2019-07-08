@@ -6,6 +6,8 @@ import org.fasttrackit.onlineshopapi.domain.Product;
 import org.fasttrackit.onlineshopapi.exception.ResourceNotFoundException;
 import org.fasttrackit.onlineshopapi.repository.CartRepository;
 import org.fasttrackit.onlineshopapi.transfer.cart.AddProductToCartRequest;
+import org.fasttrackit.onlineshopapi.transfer.cart.CartResponse;
+import org.fasttrackit.onlineshopapi.transfer.customer.CustomerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +46,21 @@ public class CartService {
     }
 
     @Transactional
-    public Cart getCart(Long customerId) throws ResourceNotFoundException {
-        return cartRepository.findById(customerId)
+    public CartResponse getCart(Long customerId) throws ResourceNotFoundException {
+        Cart cart = cartRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cart " + customerId + " does not exist"));
+
+        // using a DTO and reading all necessary properties (with getters)
+        // to avoid LazyInitializationException when properties are loaded lazily
+        CustomerResponse customerResponse = new CustomerResponse();
+        customerResponse.setId(cart.getCustomer().getId());
+        customerResponse.setFirstName(cart.getCustomer().getFirstName());
+        customerResponse.setLastName(cart.getCustomer().getLastName());
+
+        CartResponse cartResponse = new CartResponse();
+        cartResponse.setCustomer(customerResponse);
+
+        return cartResponse;
     }
 }
