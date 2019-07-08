@@ -2,6 +2,7 @@ package org.fasttrackit.onlineshopapi.service;
 
 import org.fasttrackit.onlineshopapi.domain.Cart;
 import org.fasttrackit.onlineshopapi.domain.Customer;
+import org.fasttrackit.onlineshopapi.domain.Product;
 import org.fasttrackit.onlineshopapi.exception.ResourceNotFoundException;
 import org.fasttrackit.onlineshopapi.repository.CartRepository;
 import org.fasttrackit.onlineshopapi.transfer.cart.AddProductToCartRequest;
@@ -18,11 +19,13 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final CustomerService customerService;
+    private final ProductService productService;
 
     @Autowired
-    public CartService(CartRepository cartRepository, CustomerService customerService) {
+    public CartService(CartRepository cartRepository, CustomerService customerService, ProductService productService) {
         this.cartRepository = cartRepository;
         this.customerService = customerService;
+        this.productService = productService;
     }
 
     @Transactional
@@ -34,6 +37,16 @@ public class CartService {
         Cart cart = new Cart();
         cart.setCustomer(customer);
 
+        Product product = productService.getProduct(request.getProductId());
+        cart.addProduct(product);
+
         cartRepository.save(cart);
+    }
+
+    @Transactional
+    public Cart getCart(Long customerId) throws ResourceNotFoundException {
+        return cartRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cart " + customerId + " does not exist"));
     }
 }
