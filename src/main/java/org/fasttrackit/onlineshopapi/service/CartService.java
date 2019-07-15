@@ -37,8 +37,12 @@ public class CartService {
 
         Customer customer = customerService.getCustomer(request.getCustomerId());
 
-        Cart cart = new Cart();
-        cart.setCustomer(customer);
+        Cart cart = cartRepository.findById(request.getCustomerId())
+                .orElse(new Cart());
+
+        if (cart.getCustomer() == null) {
+            cart.setCustomer(customer);
+        }
 
         Product product = productService.getProduct(request.getProductId());
         cart.addProduct(product);
