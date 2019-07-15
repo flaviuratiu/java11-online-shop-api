@@ -7,13 +7,18 @@ import org.fasttrackit.onlineshopapi.repository.ProductRepository;
 import org.fasttrackit.onlineshopapi.transfer.CreateProductRequest;
 import org.fasttrackit.onlineshopapi.transfer.GetProductsRequest;
 import org.fasttrackit.onlineshopapi.transfer.UpdateProductRequest;
+import org.fasttrackit.onlineshopapi.transfer.product.ProductResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ProductService {
@@ -70,19 +75,36 @@ public class ProductService {
         LOGGER.info("Deleted product {}", id);
     }
 
-    public Page<Product> getProducts(GetProductsRequest request, Pageable pageable) {
+    public Page<ProductResponse> getProducts(GetProductsRequest request, Pageable pageable) {
         LOGGER.info("Retrieving products {}", request);
+
+        Page<Product> products;
 
         if (request.getPartialName() != null &&
                 request.getMinimumQuantity() != null) {
-            return productRepository.findByNameContainingAndQuantityGreaterThanEqual(
+            products = productRepository.findByNameContainingAndQuantityGreaterThanEqual(
                     request.getPartialName(), request.getMinimumQuantity(),
                     pageable);
         } else if (request.getPartialName() != null) {
-            return productRepository.findByNameContaining(
+            products = productRepository.findByNameContaining(
                     request.getPartialName(), pageable);
+        } else {
+            products = productRepository.findAll(pageable);
         }
 
-        return productRepository.findAll(pageable);
+        List<ProductResponse> productResponses = new ArrayList<>();
+
+        products.getContent().forEach(product -> {
+            ProductResponse productResponse = new ProductResponse();
+            productResponse.setId(product.getId());
+            productResponse.setName(product.getName());
+            productResponse.setPrice(product.getPrice());
+            productResponse.setQuantity(product.getQuantity());
+            productResponse.setImagePath(product.getImagePath());
+
+            productResponses.add(productResponse);
+        });
+
+        return new PageImpl<>(productResponses, pageable, products.getTotalElements());
     }
 }
